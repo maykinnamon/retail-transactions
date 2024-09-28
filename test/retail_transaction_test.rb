@@ -12,6 +12,7 @@ describe RetailTransaction do
     assert_equal false, tx.processing_payment?
     assert_equal false, tx.settled?
     assert_equal false, tx.payment_declined?
+    assert_equal false, tx.refunded?
   end
 
   it "starts out empty" do
@@ -103,6 +104,10 @@ describe RetailTransaction do
       assert_equal false, tx.settled?
       assert_equal true,  tx.payment_declined?
     end
+
+    if "cannot handle refund" do
+      assert_invalid_transition { tx.refund! }
+    end
   end
 
   describe "with declined payment" do
@@ -118,6 +123,10 @@ describe RetailTransaction do
       assert_raises do
         tx.add_item("half a slice of bologna")
       end
+    end
+
+    it "cannot refund" do
+      assert_invalid_transition { tx.refund! }
     end
 
     it "can reopen and add more items" do
@@ -151,6 +160,12 @@ describe RetailTransaction do
 
     it "cannot be reopened" do
       assert_invalid_transition { tx.reopen! }
+    end
+
+    it "can be refunded" do
+      tx.refund!
+      assert_equal false, tx.settled?
+      assert_equal true, tx.refunded?
     end
   end
 end
